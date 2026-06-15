@@ -1,12 +1,16 @@
 import { useParams } from 'react-router-dom';
 import { OfferType } from '../../mocks/offers';
+import { ReviewType } from '../../mocks/reviews';
 import ReviewForm from '../review-form/review-form';
+import ReviewList from '../review-list/review-list';
+import Map from '../map/map';
 
 type OfferProps = {
   offers: OfferType[];
+  reviews: ReviewType[];
 };
 
-function Offer({ offers }: OfferProps): JSX.Element {
+function Offer({ offers, reviews }: OfferProps): JSX.Element {
   const { id } = useParams<{ id: string }>();
   const offer = offers.find((o) => o.id === id);
 
@@ -15,6 +19,8 @@ function Offer({ offers }: OfferProps): JSX.Element {
   }
 
   const ratingWidth = `${Math.round(offer.rating) * 20}%`;
+  const nearbyOffers = offers.filter((o) => o.id !== offer.id).slice(0, 3);
+  const offersForMap = [offer, ...nearbyOffers];
 
   return (
     <div className="page">
@@ -51,11 +57,13 @@ function Offer({ offers }: OfferProps): JSX.Element {
         <section className="offer">
           <div className="offer__gallery-container container">
             <div className="offer__gallery">
-              {offer.images?.slice(0, 6).map((image) => (
-                <div key={image} className="offer__image-wrapper">
-                  <img className="offer__image" src={image} alt="Photo" />
+              {/* eslint-disable react/no-array-index-key */}
+              {offer.images?.slice(0, 6).map((image, index) => (
+                <div key={`${offer.id}-image-${index}`} className="offer__image-wrapper">
+                  <img className="offer__image" src={image} alt="Photo studio" />
                 </div>
               ))}
+              {/* eslint-enable react/no-array-index-key */}
             </div>
           </div>
           <div className="offer__container container">
@@ -107,7 +115,7 @@ function Offer({ offers }: OfferProps): JSX.Element {
                   <h2 className="offer__inside-title">What&apos;s inside</h2>
                   <ul className="offer__inside-list">
                     {offer.goods.map((good) => (
-                      <li key={good} className="offer__inside-item">
+                      <li key={`good-${offer.id}-${good}`} className="offer__inside-item">
                         {good}
                       </li>
                     ))}
@@ -140,53 +148,66 @@ function Offer({ offers }: OfferProps): JSX.Element {
                 </div>
               )}
               <section className="offer__reviews reviews">
-                <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">0</span></h2>
-                <ul className="reviews__list"></ul>
+                <ReviewList reviews={reviews} />
                 <ReviewForm />
               </section>
             </div>
           </div>
-          <section className="offer__map map"></section>
+          <section className="offer__map map" style={{ height: '500px' }}>
+            <Map city={offer.city} offers={offersForMap} activeOfferId={offer.id} />
+          </section>
         </section>
         <div className="container">
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
-            <div className="near-places__list places__list">
-              {offers.filter((o) => o.id !== offer.id).slice(0, 3).map((nearOffer) => (
-                <article key={nearOffer.id} className="near-places__card place-card">
-                  {nearOffer.isPremium && (
+            <div className="near-places__list places__list tabs__content">
+              {nearbyOffers.map((nearbyOffer) => (
+                <article
+                  key={nearbyOffer.id}
+                  className="near-places__card place-card"
+                >
+                  {nearbyOffer.isPremium && (
                     <div className="place-card__mark">
                       <span>Premium</span>
                     </div>
                   )}
                   <div className="near-places__image-wrapper place-card__image-wrapper">
-                    <a href={`/offer/${nearOffer.id}`}>
-                      <img className="place-card__image" src={nearOffer.previewImage} width="260" height="200" alt="Place image" />
+                    <a href={`/offer/${nearbyOffer.id}`}>
+                      <img
+                        className="place-card__image"
+                        src={nearbyOffer.previewImage}
+                        width="260"
+                        height="200"
+                        alt="Place image"
+                      />
                     </a>
                   </div>
                   <div className="place-card__info">
                     <div className="place-card__price-wrapper">
                       <div className="place-card__price">
-                        <b className="place-card__price-value">&euro;{nearOffer.price}</b>
+                        <b className="place-card__price-value">&euro;{nearbyOffer.price}</b>
                         <span className="place-card__price-text">&#47;&nbsp;night</span>
                       </div>
-                      <button className={`place-card__bookmark-button button${nearOffer.isFavorite ? ' place-card__bookmark-button--active' : ''}`} type="button">
+                      <button
+                        className={`place-card__bookmark-button button${nearbyOffer.isFavorite ? ' place-card__bookmark-button--active' : ''}`}
+                        type="button"
+                      >
                         <svg className="place-card__bookmark-icon" width="18" height="19">
                           <use xlinkHref="#icon-bookmark"></use>
                         </svg>
-                        <span className="visually-hidden">{nearOffer.isFavorite ? 'In bookmarks' : 'To bookmarks'}</span>
+                        <span className="visually-hidden">{nearbyOffer.isFavorite ? 'In bookmarks' : 'To bookmarks'}</span>
                       </button>
                     </div>
                     <div className="place-card__rating rating">
                       <div className="place-card__stars rating__stars">
-                        <span style={{ width: `${Math.round(nearOffer.rating) * 20}%` }}></span>
+                        <span style={{ width: `${Math.round(nearbyOffer.rating) * 20}%` }}></span>
                         <span className="visually-hidden">Rating</span>
                       </div>
                     </div>
                     <h2 className="place-card__name">
-                      <a href={`/offer/${nearOffer.id}`}>{nearOffer.title}</a>
+                      <a href={`/offer/${nearbyOffer.id}`}>{nearbyOffer.title}</a>
                     </h2>
-                    <p className="place-card__type">{nearOffer.type}</p>
+                    <p className="place-card__type">{nearbyOffer.type}</p>
                   </div>
                 </article>
               ))}
