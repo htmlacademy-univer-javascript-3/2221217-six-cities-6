@@ -3,13 +3,30 @@ import { OfferType } from '../../mocks/offers';
 
 type OfferListProps = {
   offers: OfferType[];
+  onActiveOfferChange?: (offerId: string | null) => void;
 };
 
-function OfferList({ offers }: OfferListProps): JSX.Element {
+function OfferList({ offers, onActiveOfferChange }: OfferListProps): JSX.Element {
+  const handleMouseEnter = (offerId: string) => {
+    onActiveOfferChange?.(offerId);
+  };
+
+  const handleMouseLeave = () => {
+    onActiveOfferChange?.(null);
+  };
+
   return (
     <div className="cities__places-list places__list tabs__content">
       {offers.map((offer) => (
-        <OfferCard key={offer.id} {...offer} />
+        <div
+          key={offer.id}
+          onMouseEnter={() => handleMouseEnter(offer.id)}
+          onMouseLeave={handleMouseLeave}
+        >
+          <OfferCard
+            {...offer}
+          />
+        </div>
       ))}
     </div>
   );

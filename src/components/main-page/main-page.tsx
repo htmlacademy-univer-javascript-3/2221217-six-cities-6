@@ -1,4 +1,6 @@
+import { useState } from 'react';
 import OfferList from '../offer-list/offer-list';
+import Map from '../map/map';
 import { OfferType } from '../../mocks/offers';
 
 type MainPageProps = {
@@ -8,6 +10,17 @@ type MainPageProps = {
 };
 
 function MainPage({ offersCount, offers, activeCity }: MainPageProps): JSX.Element {
+  const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
+
+  const city = offers.length > 0 ? offers[0].city : {
+    name: 'Amsterdam',
+    location: {
+      latitude: 52.37454,
+      longitude: 4.897976,
+      zoom: 12,
+    },
+  };
+
   return (
     <div className="page page--gray page--main">
       <header className="header">
@@ -102,10 +115,17 @@ function MainPage({ offersCount, offers, activeCity }: MainPageProps): JSX.Eleme
                   <li className="places__option" tabIndex={0}>Top rated first</li>
                 </ul>
               </form>
-              <OfferList offers={offers} />
+              <OfferList
+                offers={offers}
+                onActiveOfferChange={setActiveOfferId}
+              />
             </section>
             <div className="cities__right-section">
-              <section className="cities__map map"></section>
+              <Map
+                city={city}
+                offers={offers}
+                activeOfferId={activeOfferId}
+              />
             </div>
           </div>
         </div>
