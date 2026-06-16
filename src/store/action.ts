@@ -1,7 +1,8 @@
-import { AxiosInstance } from 'axios';
+import axios, { AxiosInstance } from 'axios';
 import { Dispatch } from 'redux';
 import { AuthorizationStatus } from '../const';
 import { OfferType } from '../types/offer';
+import { CommentData, ReviewType } from '../types/review';
 import { LoginData, UserType } from '../types/user';
 import { dropToken, getToken, saveToken } from '../services/api';
 import { State } from './reducer';
@@ -12,6 +13,11 @@ export enum ActionType {
   SetOffersDataLoading = 'SET_OFFERS_DATA_LOADING',
   SetAuthorizationStatus = 'SET_AUTHORIZATION_STATUS',
   SetUser = 'SET_USER',
+  SetCurrentOffer = 'SET_CURRENT_OFFER',
+  SetNearbyOffers = 'SET_NEARBY_OFFERS',
+  SetReviews = 'SET_REVIEWS',
+  SetOfferDataLoading = 'SET_OFFER_DATA_LOADING',
+  ResetOfferData = 'RESET_OFFER_DATA',
 }
 
 export type ChangeCityAction = {
@@ -39,12 +45,41 @@ export type SetUserAction = {
   payload: UserType | null;
 };
 
+export type SetCurrentOfferAction = {
+  type: ActionType.SetCurrentOffer;
+  payload: OfferType | null;
+};
+
+export type SetNearbyOffersAction = {
+  type: ActionType.SetNearbyOffers;
+  payload: OfferType[];
+};
+
+export type SetReviewsAction = {
+  type: ActionType.SetReviews;
+  payload: ReviewType[];
+};
+
+export type SetOfferDataLoadingAction = {
+  type: ActionType.SetOfferDataLoading;
+  payload: boolean;
+};
+
+export type ResetOfferDataAction = {
+  type: ActionType.ResetOfferData;
+};
+
 export type Action =
   | ChangeCityAction
   | FillOffersAction
   | SetOffersDataLoadingAction
   | SetAuthorizationStatusAction
-  | SetUserAction;
+  | SetUserAction
+  | SetCurrentOfferAction
+  | SetNearbyOffersAction
+  | SetReviewsAction
+  | SetOfferDataLoadingAction
+  | ResetOfferDataAction;
 
 export const changeCity = (city: string): ChangeCityAction => ({
   type: ActionType.ChangeCity,
@@ -69,6 +104,30 @@ export const setAuthorizationStatus = (authorizationStatus: AuthorizationStatus)
 export const setUser = (user: UserType | null): SetUserAction => ({
   type: ActionType.SetUser,
   payload: user,
+});
+
+export const setCurrentOffer = (offer: OfferType | null): SetCurrentOfferAction => ({
+  type: ActionType.SetCurrentOffer,
+  payload: offer,
+});
+
+export const setNearbyOffers = (offers: OfferType[]): SetNearbyOffersAction => ({
+  type: ActionType.SetNearbyOffers,
+  payload: offers,
+});
+
+export const setReviews = (reviews: ReviewType[]): SetReviewsAction => ({
+  type: ActionType.SetReviews,
+  payload: reviews,
+});
+
+export const setOfferDataLoading = (isOfferDataLoading: boolean): SetOfferDataLoadingAction => ({
+  type: ActionType.SetOfferDataLoading,
+  payload: isOfferDataLoading,
+});
+
+export const resetOfferData = (): ResetOfferDataAction => ({
+  type: ActionType.ResetOfferData,
 });
 
 export const fetchOffersAction = () =>
@@ -140,5 +199,53 @@ export const logoutAction = () =>
       dropToken();
       dispatch(setUser(null));
       dispatch(setAuthorizationStatus(AuthorizationStatus.NoAuth));
+    }
+  };
+
+export const fetchOfferAction = (offerId: string) =>
+  async (
+    dispatch: Dispatch<Action>,
+    _getState: () => State,
+    api: AxiosInstance,
+  ): Promise<boolean> => {
+    dispatch(setOfferDataLoading(true));
+
+    try {
+      const [offerResponse, nearbyResponse, commentsResponse] = await Promise.all([
+        api.get<OfferType>(`/offers/${offerId}`),
+        api.get<OfferType[]>(`/offers/${offerId}/nearby`),
+        api.get<ReviewType[]>(`/comments/${offerId}`),
+      ]);
+
+      dispatch(setCurrentOffer(offerResponse.data));
+      dispatch(setNearbyOffers(nearbyResponse.data));
+      dispatch(setReviews(commentsResponse.data));
+
+      return true;
+    } catch (error) {
+      if (axios.isAxiosError(error) && error.response?.status === 404) {
+        dispatch(resetOfferData());
+        return false;
+      }
+
+      throw error;
+    } finally {
+      dispatch(setOfferDataLoading(false));
+    }
+  };
+
+export const postCommentAction = (offerId: string, { comment, rating }: CommentData) =>
+  async (
+    dispatch: Dispatch<Action>,
+    getState: () => State,
+    api: AxiosInstance,
+  ): Promise<boolean> => {
+    try {
+      const { data } = await api.post<ReviewType>(`/comments/${offerId}`, { comment, rating });
+      const { reviews } = getState();
+      dispatch(setReviews([data, ...reviews]));
+      return true;
+    } catch {
+      return false;
     }
   };

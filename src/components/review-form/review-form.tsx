@@ -1,8 +1,17 @@
-import React, { useState } from 'react';
+import React, { FormEvent, useState } from 'react';
+import { useAppDispatch } from '../../store/hooks';
+import { postCommentAction } from '../../store/action';
 
-function ReviewForm(): JSX.Element {
+type ReviewFormProps = {
+  offerId: string;
+};
+
+function ReviewForm({ offerId }: ReviewFormProps): JSX.Element {
+  const dispatch = useAppDispatch();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hasError, setHasError] = useState(false);
 
   const handleRatingChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRating(Number(event.target.value));
@@ -29,8 +38,35 @@ function ReviewForm(): JSX.Element {
     }
   };
 
+  const handleSubmit = (evt: FormEvent<HTMLFormElement>) => {
+    evt.preventDefault();
+
+    if (!rating || comment.length < 50 || comment.length > 300) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    setHasError(false);
+
+    void dispatch(postCommentAction(offerId, { comment, rating }))
+      .then((isSuccess) => {
+        if (isSuccess) {
+          setRating(0);
+          setComment('');
+        } else {
+          setHasError(true);
+        }
+      })
+      .finally(() => {
+        setIsSubmitting(false);
+      });
+  };
+
+  const isFormDisabled = isSubmitting;
+  const isSubmitDisabled = isSubmitting || !rating || comment.length < 50 || comment.length > 300;
+
   return (
-    <form className="reviews__form form" action="#" method="post">
+    <form className="reviews__form form" action="#" method="post" onSubmit={handleSubmit}>
       <label className="reviews__label form__label" htmlFor="review">Your review</label>
       <div className="reviews__rating-form form__rating">
         {[5, 4, 3, 2, 1].map((num) => (
@@ -43,6 +79,7 @@ function ReviewForm(): JSX.Element {
               type="radio"
               checked={rating === num}
               onChange={handleRatingChange}
+              disabled={isFormDisabled}
             />
             <label
               htmlFor={`${num}-stars`}
@@ -63,16 +100,22 @@ function ReviewForm(): JSX.Element {
         placeholder="Tell how was your stay, what you like and what can be improved"
         value={comment}
         onChange={handleCommentChange}
+        disabled={isFormDisabled}
       >
       </textarea>
       <div className="reviews__button-wrapper">
         <p className="reviews__help">
           To submit review please make sure to set <span className="reviews__star">rating</span> and describe your stay with at least <b className="reviews__text-amount">50 characters</b>.
         </p>
+        {hasError && (
+          <p style={{ color: '#ff0000', marginBottom: '10px' }}>
+            Failed to submit review. Please try again.
+          </p>
+        )}
         <button
           className="reviews__submit form__submit button"
           type="submit"
-          disabled={!rating || comment.length < 50 || comment.length > 300}
+          disabled={isSubmitDisabled}
         >
           Submit
         </button>
