@@ -5,13 +5,8 @@ import Favorites from '../favorites/favorites';
 import Offer from '../offer/offer';
 import NotFound from '../not-found/not-found';
 import PrivateRoute from '../private-route/private-route';
-import { ReviewType } from '../../mocks/reviews';
 
-type AppProps = {
-  reviews: ReviewType[];
-};
-
-function App({ reviews }: AppProps): JSX.Element {
+function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
@@ -25,7 +20,7 @@ function App({ reviews }: AppProps): JSX.Element {
             </PrivateRoute>
           }
         />
-        <Route path="/offer/:id" element={<Offer reviews={reviews} />} />
+        <Route path="/offer/:id" element={<Offer />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>

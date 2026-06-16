@@ -1,27 +1,56 @@
-import { useParams } from 'react-router-dom';
-import { useSelector } from 'react-redux';
-import { ReviewType } from '../../mocks/reviews';
-import { RootState } from '../../store';
+import { useEffect, useState } from 'react';
+import { Link, useParams } from 'react-router-dom';
+import { AuthorizationStatus } from '../../const';
+import { fetchOfferAction, resetOfferData } from '../../store/action';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import NotFound from '../not-found/not-found';
 import ReviewForm from '../review-form/review-form';
 import ReviewList from '../review-list/review-list';
 import Map from '../map/map';
+import Spinner from '../spinner/spinner';
 
-type OfferProps = {
-  reviews: ReviewType[];
-};
-
-function Offer({ reviews }: OfferProps): JSX.Element {
+function Offer(): JSX.Element {
   const { id } = useParams<{ id: string }>();
-  const offers = useSelector((state: RootState) => state.offers);
-  const offer = offers.find((o) => o.id === id);
+  const dispatch = useAppDispatch();
+  const currentOffer = useAppSelector((state) => state.currentOffer);
+  const nearbyOffers = useAppSelector((state) => state.nearbyOffers);
+  const reviews = useAppSelector((state) => state.reviews);
+  const isOfferDataLoading = useAppSelector((state) => state.isOfferDataLoading);
+  const authorizationStatus = useAppSelector((state) => state.authorizationStatus);
+  const [isNotFound, setIsNotFound] = useState(false);
 
-  if (!offer) {
-    return <div>Offer not found</div>;
+  const isAuth = authorizationStatus === AuthorizationStatus.Auth;
+
+  useEffect(() => {
+    if (!id) {
+      return;
+    }
+
+    setIsNotFound(false);
+
+    void dispatch(fetchOfferAction(id)).then((isFound) => {
+      if (!isFound) {
+        setIsNotFound(true);
+      }
+    });
+
+    return () => {
+      dispatch(resetOfferData());
+    };
+  }, [id, dispatch]);
+
+  if (isNotFound) {
+    return <NotFound />;
   }
 
+  if (isOfferDataLoading || !currentOffer) {
+    return <Spinner />;
+  }
+
+  const offer = currentOffer;
   const ratingWidth = `${Math.round(offer.rating) * 20}%`;
-  const nearbyOffers = offers.filter((o) => o.id !== offer.id).slice(0, 3);
-  const offersForMap = [offer, ...nearbyOffers];
+  const nearbyOffersForDisplay = nearbyOffers.slice(0, 3);
+  const offersForMap = [offer, ...nearbyOffersForDisplay];
 
   return (
     <div className="page">
@@ -29,25 +58,36 @@ function Offer({ reviews }: OfferProps): JSX.Element {
         <div className="container">
           <div className="header__wrapper">
             <div className="header__left">
-              <a className="header__logo-link" href="/">
+              <Link className="header__logo-link" to="/">
                 <img className="header__logo" src="img/logo.svg" alt="6 cities logo" width="81" height="41" />
-              </a>
+              </Link>
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                <li className="header__nav-item user">
-                  <a className="header__nav-link header__nav-link--profile" href="/favorites">
-                    <div className="header__avatar-wrapper user__avatar-wrapper">
-                    </div>
-                    <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                    <span className="header__favorite-count">3</span>
-                  </a>
-                </li>
-                <li className="header__nav-item">
-                  <a className="header__nav-link" href="#">
-                    <span className="header__signout">Sign out</span>
-                  </a>
-                </li>
+                {isAuth ? (
+                  <>
+                    <li className="header__nav-item user">
+                      <Link className="header__nav-link header__nav-link--profile" to="/favorites">
+                        <div className="header__avatar-wrapper user__avatar-wrapper">
+                        </div>
+                        <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
+                        <span className="header__favorite-count">3</span>
+                      </Link>
+                    </li>
+                    <li className="header__nav-item">
+                      <a className="header__nav-link" href="#">
+                        <span className="header__signout">Sign out</span>
+                      </a>
+                    </li>
+                  </>
+                ) : (
+                  <li className="header__nav-item user">
+                    <Link className="header__nav-link header__nav-link--profile" to="/login">
+                      <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                      <span className="header__login">Sign in</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
@@ -150,7 +190,7 @@ function Offer({ reviews }: OfferProps): JSX.Element {
               )}
               <section className="offer__reviews reviews">
                 <ReviewList reviews={reviews} />
-                <ReviewForm />
+                {isAuth && id && <ReviewForm offerId={id} />}
               </section>
             </div>
           </div>
@@ -162,7 +202,7 @@ function Offer({ reviews }: OfferProps): JSX.Element {
           <section className="near-places places">
             <h2 className="near-places__title">Other places in the neighbourhood</h2>
             <div className="near-places__list places__list tabs__content">
-              {nearbyOffers.map((nearbyOffer) => (
+              {nearbyOffersForDisplay.map((nearbyOffer) => (
                 <article
                   key={nearbyOffer.id}
                   className="near-places__card place-card"
@@ -173,7 +213,7 @@ function Offer({ reviews }: OfferProps): JSX.Element {
                     </div>
                   )}
                   <div className="near-places__image-wrapper place-card__image-wrapper">
-                    <a href={`/offer/${nearbyOffer.id}`}>
+                    <Link to={`/offer/${nearbyOffer.id}`}>
                       <img
                         className="place-card__image"
                         src={nearbyOffer.previewImage}
@@ -181,7 +221,7 @@ function Offer({ reviews }: OfferProps): JSX.Element {
                         height="200"
                         alt="Place image"
                       />
-                    </a>
+                    </Link>
                   </div>
                   <div className="place-card__info">
                     <div className="place-card__price-wrapper">
@@ -206,7 +246,7 @@ function Offer({ reviews }: OfferProps): JSX.Element {
                       </div>
                     </div>
                     <h2 className="place-card__name">
-                      <a href={`/offer/${nearbyOffer.id}`}>{nearbyOffer.title}</a>
+                      <Link to={`/offer/${nearbyOffer.id}`}>{nearbyOffer.title}</Link>
                     </h2>
                     <p className="place-card__type">{nearbyOffer.type}</p>
                   </div>

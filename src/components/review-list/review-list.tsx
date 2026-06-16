@@ -1,16 +1,19 @@
 import Review from '../review/review';
-import { ReviewType } from '../../mocks/reviews';
+import { ReviewType } from '../../types/review';
+import { getSortedReviews } from '../../utils/reviews';
 
 type ReviewListProps = {
   reviews: ReviewType[];
 };
 
 function ReviewList({ reviews }: ReviewListProps): JSX.Element {
+  const sortedReviews = getSortedReviews(reviews);
+
   return (
     <>
       <h2 className="reviews__title">Reviews &middot; <span className="reviews__amount">{reviews.length}</span></h2>
       <ul className="reviews__list">
-        {reviews.map((review) => (
+        {sortedReviews.map((review) => (
           <Review key={review.id} review={review} />
         ))}
       </ul>
