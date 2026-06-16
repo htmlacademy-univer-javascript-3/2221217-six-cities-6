@@ -1,5 +1,15 @@
 export const CITIES = ['Paris', 'Cologne', 'Brussels', 'Amsterdam', 'Hamburg', 'Dusseldorf'];
 
+export enum AuthorizationStatus {
+  Auth = 'AUTH',
+  NoAuth = 'NO_AUTH',
+  Unknown = 'UNKNOWN',
+}
+
+export const AUTH_TOKEN_KEY = 'six-cities-token';
+
+export const PASSWORD_PATTERN = /^(?=.*[A-Za-z])(?=.*\d)[^\s]+$/;
+
 export const CITY_COORDINATES: Record<string, { latitude: number; longitude: number; zoom: number }> = {
   Paris: { latitude: 48.85661, longitude: 2.351499, zoom: 13 },
   Cologne: { latitude: 50.938361, longitude: 6.959974, zoom: 13 },

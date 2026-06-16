@@ -1,22 +1,27 @@
 import { useMemo, useState } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import OfferList from '../offer-list/offer-list';
 import Map from '../map/map';
 import CitiesList from '../cities-list/cities-list';
 import SortOptions from '../sort-options/sort-options';
 import Spinner from '../spinner/spinner';
-import { CITIES, CITY_COORDINATES } from '../../const';
-import { changeCity } from '../../store/action';
-import { RootState } from '../../store';
+import { AuthorizationStatus, CITIES, CITY_COORDINATES } from '../../const';
+import { changeCity, logoutAction } from '../../store/action';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { getSortedOffers, SortType } from '../../utils/sorting';
 
 function MainPage(): JSX.Element {
-  const dispatch = useDispatch();
-  const city = useSelector((state: RootState) => state.city);
-  const allOffers = useSelector((state: RootState) => state.offers);
-  const isOffersDataLoading = useSelector((state: RootState) => state.isOffersDataLoading);
+  const dispatch = useAppDispatch();
+  const city = useAppSelector((state) => state.city);
+  const allOffers = useAppSelector((state) => state.offers);
+  const isOffersDataLoading = useAppSelector((state) => state.isOffersDataLoading);
+  const authorizationStatus = useAppSelector((state) => state.authorizationStatus);
+  const user = useAppSelector((state) => state.user);
   const [activeOfferId, setActiveOfferId] = useState<string | null>(null);
   const [activeSorting, setActiveSorting] = useState<SortType>(SortType.Popular);
+
+  const isAuth = authorizationStatus === AuthorizationStatus.Auth;
+  const favoriteOffersCount = allOffers.filter((offer) => offer.isFavorite).length;
 
   const filteredOffers = useMemo(
     () => allOffers.filter((offer) => offer.city.name === city),
@@ -41,6 +46,10 @@ function MainPage(): JSX.Element {
     dispatch(changeCity(selectedCity));
   };
 
+  const handleSignOut = () => {
+    dispatch(logoutAction());
+  };
+
   return (
     <div className="page page--gray page--main">
       <header className="header">
@@ -59,18 +68,37 @@ function MainPage(): JSX.Element {
             </div>
             <nav className="header__nav">
               <ul className="header__nav-list">
-                <li className="header__nav-item user">
-                  <a className="header__nav-link header__nav-link--profile" href="/favorites">
-                    <div className="header__avatar-wrapper user__avatar-wrapper"></div>
-                    <span className="header__user-name user__name">Oliver.conner@gmail.com</span>
-                    <span className="header__favorite-count">3</span>
-                  </a>
-                </li>
-                <li className="header__nav-item">
-                  <a className="header__nav-link" href="#">
-                    <span className="header__signout">Sign out</span>
-                  </a>
-                </li>
+                {isAuth && user ? (
+                  <>
+                    <li className="header__nav-item user">
+                      <Link className="header__nav-link header__nav-link--profile" to="/favorites">
+                        <div
+                          className="header__avatar-wrapper user__avatar-wrapper"
+                          style={{ backgroundImage: `url(${user.avatarUrl})` }}
+                        >
+                        </div>
+                        <span className="header__user-name user__name">{user.email}</span>
+                        <span className="header__favorite-count">{favoriteOffersCount}</span>
+                      </Link>
+                    </li>
+                    <li className="header__nav-item">
+                      <a className="header__nav-link" href="#" onClick={(evt) => {
+                        evt.preventDefault();
+                        handleSignOut();
+                      }}
+                      >
+                        <span className="header__signout">Sign out</span>
+                      </a>
+                    </li>
+                  </>
+                ) : (
+                  <li className="header__nav-item user">
+                    <Link className="header__nav-link header__nav-link--profile" to="/login">
+                      <div className="header__avatar-wrapper user__avatar-wrapper"></div>
+                      <span className="header__login">Sign in</span>
+                    </Link>
+                  </li>
+                )}
               </ul>
             </nav>
           </div>
