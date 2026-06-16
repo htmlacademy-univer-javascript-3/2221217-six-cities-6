@@ -1,9 +1,13 @@
-import { useSelector } from 'react-redux';
-import { RootState } from '../../store';
+import { useMemo } from 'react';
+import { useAppSelector } from '../../store/hooks';
+import { getOffers } from '../../store/selectors';
 
 function Favorites(): JSX.Element {
-  const offers = useSelector((state: RootState) => state.offers);
-  const favoriteOffers = offers.filter((offer) => offer.isFavorite);
+  const offers = useAppSelector(getOffers);
+  const favoriteOffers = useMemo(
+    () => offers.filter((offer) => offer.isFavorite),
+    [offers],
+  );
 
   return (
     <div className="page">

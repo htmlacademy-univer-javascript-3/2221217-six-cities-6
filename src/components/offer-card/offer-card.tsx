@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { OfferType } from '../../types/offer';
 
@@ -55,4 +56,4 @@ function OfferCard({ id, title, type, price, rating, isPremium, isFavorite, prev
   );
 }
 
-export default OfferCard;
+export default memo(OfferCard);

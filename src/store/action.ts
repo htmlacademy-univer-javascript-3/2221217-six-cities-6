@@ -5,7 +5,7 @@ import { OfferType } from '../types/offer';
 import { CommentData, ReviewType } from '../types/review';
 import { LoginData, UserType } from '../types/user';
 import { dropToken, getToken, saveToken } from '../services/api';
-import { State } from './reducer';
+import { State } from './root-reducer';
 
 export enum ActionType {
   ChangeCity = 'CHANGE_CITY',
@@ -242,7 +242,7 @@ export const postCommentAction = (offerId: string, { comment, rating }: CommentD
   ): Promise<boolean> => {
     try {
       const { data } = await api.post<ReviewType>(`/comments/${offerId}`, { comment, rating });
-      const { reviews } = getState();
+      const { reviews } = getState().offerData;
       dispatch(setReviews([data, ...reviews]));
       return true;
     } catch {

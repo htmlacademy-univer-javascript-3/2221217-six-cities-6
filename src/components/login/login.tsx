@@ -2,12 +2,13 @@ import { FormEvent, useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { AuthorizationStatus, PASSWORD_PATTERN } from '../../const';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { getAuthorizationStatus } from '../../store/selectors';
 import { loginAction } from '../../store/action';
 
 function Login(): JSX.Element {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const authorizationStatus = useAppSelector((state) => state.authorizationStatus);
+  const authorizationStatus = useAppSelector(getAuthorizationStatus);
   const [loginError, setLoginError] = useState(false);
 
   if (authorizationStatus === AuthorizationStatus.Auth) {

@@ -1,14 +1,15 @@
+import { memo } from 'react';
 import OfferCard from '../offer-card/offer-card';
 import { OfferType } from '../../types/offer';
 
-type OfferListProps = {
-  offers: OfferType[];
+type OfferListItemProps = {
+  offer: OfferType;
   onActiveOfferChange?: (offerId: string | null) => void;
 };
 
-function OfferList({ offers, onActiveOfferChange }: OfferListProps): JSX.Element {
-  const handleMouseEnter = (offerId: string) => {
-    onActiveOfferChange?.(offerId);
+function OfferListItem({ offer, onActiveOfferChange }: OfferListItemProps): JSX.Element {
+  const handleMouseEnter = () => {
+    onActiveOfferChange?.(offer.id);
   };
 
   const handleMouseLeave = () => {
@@ -16,20 +17,34 @@ function OfferList({ offers, onActiveOfferChange }: OfferListProps): JSX.Element
   };
 
   return (
+    <div
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
+      <OfferCard {...offer} />
+    </div>
+  );
+}
+
+const MemoizedOfferListItem = memo(OfferListItem);
+
+type OfferListProps = {
+  offers: OfferType[];
+  onActiveOfferChange?: (offerId: string | null) => void;
+};
+
+function OfferList({ offers, onActiveOfferChange }: OfferListProps): JSX.Element {
+  return (
     <div className="cities__places-list places__list tabs__content">
       {offers.map((offer) => (
-        <div
+        <MemoizedOfferListItem
           key={offer.id}
-          onMouseEnter={() => handleMouseEnter(offer.id)}
-          onMouseLeave={handleMouseLeave}
-        >
-          <OfferCard
-            {...offer}
-          />
-        </div>
+          offer={offer}
+          onActiveOfferChange={onActiveOfferChange}
+        />
       ))}
     </div>
   );
 }
 
-export default OfferList;
+export default memo(OfferList);
