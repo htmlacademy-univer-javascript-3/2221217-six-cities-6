@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { OfferType } from '../../types/offer';
@@ -74,4 +74,4 @@ function Map({ city, offers, activeOfferId }: MapProps): JSX.Element {
   return <div ref={mapRef} style={{ height: '100%', width: '100%' }}></div>;
 }
 
-export default Map;
+export default memo(Map);

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useCallback, useState } from 'react';
 import classNames from 'classnames';
 import { SORT_OPTIONS, SortType } from '../../utils/sorting';
 
@@ -14,10 +14,10 @@ function SortOptions({ activeSorting, onSortingChange }: SortOptionsProps): JSX.
     setIsOpened((isOpen) => !isOpen);
   };
 
-  const handleOptionClick = (sorting: SortType) => {
+  const handleOptionClick = useCallback((sorting: SortType) => {
     onSortingChange(sorting);
     setIsOpened(false);
-  };
+  }, [onSortingChange]);
 
   return (
     <form className="places__sorting" action="#" method="get">
@@ -54,4 +54,4 @@ function SortOptions({ activeSorting, onSortingChange }: SortOptionsProps): JSX.
   );
 }
 
-export default SortOptions;
+export default memo(SortOptions);

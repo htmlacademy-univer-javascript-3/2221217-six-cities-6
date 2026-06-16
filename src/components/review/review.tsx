@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import { ReviewType } from '../../types/review';
 
 type ReviewProps = {
@@ -6,8 +7,10 @@ type ReviewProps = {
 
 function Review({ review }: ReviewProps): JSX.Element {
   const ratingWidth = `${Math.round(review.rating) * 20}%`;
-  const date = new Date(review.date);
-  const formattedDate = date.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  const formattedDate = useMemo(
+    () => new Date(review.date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
+    [review.date],
+  );
 
   return (
     <li className="reviews__item">
@@ -43,4 +46,4 @@ function Review({ review }: ReviewProps): JSX.Element {
   );
 }
 
-export default Review;
+export default memo(Review);

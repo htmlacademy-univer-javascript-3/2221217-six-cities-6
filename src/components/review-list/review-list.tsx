@@ -1,3 +1,4 @@
+import { memo, useMemo } from 'react';
 import Review from '../review/review';
 import { ReviewType } from '../../types/review';
 import { getSortedReviews } from '../../utils/reviews';
@@ -7,7 +8,7 @@ type ReviewListProps = {
 };
 
 function ReviewList({ reviews }: ReviewListProps): JSX.Element {
-  const sortedReviews = getSortedReviews(reviews);
+  const sortedReviews = useMemo(() => getSortedReviews(reviews), [reviews]);
 
   return (
     <>
@@ -21,4 +22,4 @@ function ReviewList({ reviews }: ReviewListProps): JSX.Element {
   );
 }
 
-export default ReviewList;
+export default memo(ReviewList);

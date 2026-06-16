@@ -1,3 +1,4 @@
+import { memo, useCallback } from 'react';
 import classNames from 'classnames';
 
 type CitiesListProps = {
@@ -7,6 +8,11 @@ type CitiesListProps = {
 };
 
 function CitiesList({ cities, activeCity, onCityClick }: CitiesListProps): JSX.Element {
+  const handleCityClick = useCallback((evt: React.MouseEvent<HTMLAnchorElement>, city: string) => {
+    evt.preventDefault();
+    onCityClick(city);
+  }, [onCityClick]);
+
   return (
     <section className="locations container">
       <ul className="locations__list tabs__list">
@@ -17,10 +23,7 @@ function CitiesList({ cities, activeCity, onCityClick }: CitiesListProps): JSX.E
                 'tabs__item--active': city === activeCity,
               })}
               href="#"
-              onClick={(evt) => {
-                evt.preventDefault();
-                onCityClick(city);
-              }}
+              onClick={(evt) => handleCityClick(evt, city)}
             >
               <span>{city}</span>
             </a>
@@ -31,4 +34,4 @@ function CitiesList({ cities, activeCity, onCityClick }: CitiesListProps): JSX.E
   );
 }
 
-export default CitiesList;
+export default memo(CitiesList);
